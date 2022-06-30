@@ -40,14 +40,14 @@ echo "Renaming project ..."
 
 for filename in $(git ls-files)
 do
-    sed -i "s/%AUTHOR_NAME%/$author/g" $filename
-    sed -i "s/%AUTHOR_FIRST_NAME%/$first_name/g" $filename
-    sed -i "s/%AUTHOR_FAMILY_NAME%/$family_name/g" $filename
-    sed -i "s/%PROJECT_NAME%/$project_name/g" $filename
-    sed -i "s/%PROJECT_URLNAME%/$urlname/g" $filename
-    sed -i "s/%PROJECT_DESCRIPTION%/$description/g" $filename
-    sed -i "s/%CREATION_DATE%/$creation_date/g" $filename
-    sed -i "s/%CREATION_YEAR%/$creation_year/g" $filename
+    sed -i "s/Mike Hucka/$author/g" $filename
+    sed -i "s/Mike/$first_name/g" $filename
+    sed -i "s/Hucka/$family_name/g" $filename
+    sed -i "s/refoliate/$project_name/g" $filename
+    sed -i "s/refoliate/$urlname/g" $filename
+    sed -i "s/REstore FOLIo sAved insTance rEcords/$description/g" $filename
+    sed -i "s/2022-06-30/$creation_date/g" $filename
+    sed -i "s/2022/$creation_year/g" $filename
     echo "Performed substitutions in $filename"
 done
 

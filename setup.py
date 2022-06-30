@@ -2,9 +2,9 @@
 # =============================================================================
 # @file    setup.py
 # @brief   Installation setup file
-# @created %CREATION_DATE%
+# @created 2022-06-30
 # @license Please see the file named LICENSE in the project directory
-# @website https://github.com/caltechlibrary/%PROJECT_URLNAME%
+# @website https://github.com/caltechlibrary/refoliate
 #
 # Note: configuration metadata is maintained in setup.cfg.  This file exists
 # primarily to hook in setup.cfg and requirements.txt.

@@ -1,6 +1,6 @@
-# Change log for %PROJECT_NAME%
+# Change log for refoliate
 
-## Version 0.0.0 (%CREATION_DATE%)
+## Version 0.0.0 (2022-06-30)
 
-Project repository created at https://github.com/caltechlibrary/%PROJECT_URLNAME%
-by %AUTHOR_NAME%.
+Project repository created at https://github.com/caltechlibrary/refoliate
+by Mike Hucka.
