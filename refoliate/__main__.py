@@ -41,7 +41,31 @@ class FolioError(Exception):
 )
 
 def main(continue_ = False, version = False, debug = 'OUT', *source_dir):
-    '''REstore FOLIo sAved insTance rEcords'''
+    '''REstore FOLIo sAved insTance rEcords.
+
+This program takes a directory of JSON files previously downloaded from FOLIO
+by a program such as Foliage.  The files are assumed to represent instance,
+holdings, and item records that have been deleted from FOLIO. This program
+proceeds to put the records back into FOLIO as-is, using the same UUID's
+and all other fields.
+
+If given the argument --continue, then errors involving the inability to
+create a record (e.g., due to the record already existing in FOLIO) will make
+this program continue execution; otherwise, by default, this program will
+stop at the first error.
+
+If given the -@ argument (/@ on Windows), this program will output a detailed
+trace of what it is doing.  The debug trace will be sent to the given
+destination, which can be '-' to indicate console output, or a file path to
+send the output to a file.
+
+If given the -V option (/V on Windows), this program will print the version
+and other information, and exit without doing anything else.
+
+Command-line arguments summary
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+'''
+
 
     # Set up debug logging as soon as possible, if requested ------------------
 
