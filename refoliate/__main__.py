@@ -22,17 +22,25 @@ import plac
 from   sidetrack import set_debug, log
 
 
+# Local exceptions.
+# .............................................................................
+
+class FolioError(Exception):
+    '''Unrecoverable problem involving interactions with the FOLIO server.'''
+
+
 # Main program.
 # .............................................................................
 
 # For more info about how plac works see https://plac.readthedocs.io/en/latest/
 @plac.annotations(
+    continue_  = ("continue, don't stop, if an error occurs",   'flag',   'c'),
     version    = ('print version info and exit',                'flag',   'V'),
     debug      = ('log debug output to "OUT" ("-" is console)', 'option', '@'),
     source_dir = 'directory containing JSON files'
 )
 
-def main(version = False, debug = 'OUT', *source_dir):
+def main(continue_ = False, version = False, debug = 'OUT', *source_dir):
     '''REstore FOLIo sAved insTance rEcords'''
 
     # Set up debug logging as soon as possible, if requested ------------------
@@ -65,9 +73,12 @@ def main(version = False, debug = 'OUT', *source_dir):
         alert('Unable to connect to FOLIO.')
         sys.exit(1)
 
+    stop_on_error = not continue_
+
     # Do the real work --------------------------------------------------------
 
     # Create dictionary of all records (in json format) indexed by their UUIDs.
+    inform(f'Looking for JSON files recursively in {source_dir} ...')
     records = {}
     try:
         import glob
@@ -77,69 +88,81 @@ def main(version = False, debug = 'OUT', *source_dir):
                 rec = json.load(fp)
                 uuid = rec['id']
                 records[uuid] = rec
-                log(f'read {record_type(rec)} record {uuid} from file {filename}')
+                log(f'read {kind(rec)} record {uuid} from file {filename}')
     except Exception as ex:
         alert('Encountered problem reading JSON files: ' + str(ex))
         sys.exit(1)
-    inform(f'Read a total of {len(records)} JSON files')
+    inform(f'Found a total of {len(records)} JSON files.')
 
-    # Now we need to bundle together the records that belong together: items,
-    # holding records, and instance records. We have to follow pointers from
-    # items to holdings to instances.
-
-    # build dict of instances, which has dict of holdings rec, which has list of items
+    # Next, build dict of instances, where each value is a dict of holdings
+    # records, where in turn each value is a dict of item records.
 
     from collections import defaultdict
-    done = set()
+    seen = set()
     holdings_items = defaultdict(list)     # list of items, keyed by holdings id
     instance_holdings = defaultdict(list)  # list of holdings, keyed by instance id
 
-    for record in filter(lambda r: record_type(r) == 'item_record', records.values()):
+    for record in filter(lambda r: kind(r) == 'item_record', records.values()):
         item_id = record['id']
         holdings_id = record['holdingsRecordId']
         holdings_items[holdings_id].append(record)
-        done.add(item_id)
+        seen.add(item_id)
         log(f'added item {item_id} under holdings {holdings_id}')
-    for record in filter(lambda r: record_type(r) == 'holdings_record', records.values()):
+    for record in filter(lambda r: kind(r) == 'holdings_record', records.values()):
         holdings_id = record['id']
         instance_id = record['instanceId']
         instance_holdings[instance_id].append(record)
-        done.add(holdings_id)
+        seen.add(holdings_id)
         log(f'added holdings {holdings_id} under instance {instance_id}')
-    for record in filter(lambda r: record_type(r) == 'instance_record', records.values()):
+    for record in filter(lambda r: kind(r) == 'instance_record', records.values()):
         instance_id = record['id']
         if instance_id not in instance_holdings:
             log(f'found instance with no holdings or items: {instance_id}')
             instance_holdings[instance_id] = []
-        done.add(instance_id)
+        seen.add(instance_id)
 
     # Check: have we filed everything we were given?
-    if set(records.keys()) - done != set():
+    if set(records.keys()) - seen != set():
         alert('Failed to account for all records given.')
         sys.exit(1)
 
     # Submit things to Folio top-down:
+    count = 0
+    inform(f'Will attempt to create a total of {len(records)} records.')
     try:
         for instance_id in instance_holdings.keys():
+            count += 1
             if folio_exists('instance', instance_id):
-                warn(f'Instance UUID {instance_id} already exists in FOLIO')
-            else:
-                folio_new('instance', records[instance_id])
+                warn(f'{count:03} Instance UUID {instance_id} already exists in FOLIO')
+            elif folio_create('instance', records[instance_id]):
+                inform(f'{count:03} Created instance record {instance_id}')
+            elif stop_on_error:
+                sys.exit(1)
+
             for holdings in instance_holdings[instance_id]:
+                count += 1
                 holdings_id = holdings['id']
                 if folio_exists('holdings', holdings_id):
-                    warn(f'Holdings UUID {holdings_id} already exists in FOLIO')
-                else:
-                    folio_new('holdings', records[holdings_id])
+                    warn(f'{count:03} Holdings UUID {holdings_id} already exists in FOLIO')
+                elif folio_create('holdings', records[holdings_id]):
+                    inform(f'{count:03} Created holdings record {holdings_id}')
+                elif stop_on_error:
+                    sys.exit(1)
+
                 for item in holdings_items[holdings_id]:
+                    count += 1
                     item_id = item['id']
                     if folio_exists('item', item_id):
-                        warn(f'Item UUID {item_id} already exists in FOLIO')
-                    else:
-                        folio_new('item', records[item_id])
-    except Exception as ex:
-        log('exception: ' + str(ex))
-        breakpoint()
+                        warn(f'{count:03} Item UUID {item_id} already exists in FOLIO')
+                    elif folio_create('item', records[item_id]):
+                        inform(f'{count:03} Created item record {holdings_id}')
+                    elif stop_on_error:
+                        sys.exit(1)
+    except FolioError as ex:
+        alert('Stopping: ' + str(ex))
+        sys.exit(1)
+
+    inform('Done.')
 
 
 # Miscellaneous helper functions.
@@ -219,7 +242,7 @@ _ENDPOINT = {
     'instance': '/instance-storage/instances'
 }
 
-def folio_exists(record_type, record_id):
+def folio_exists(record_kind, record_id):
     url       = os.environ['FOLIO_OKAPI_URL']
     token     = os.environ['FOLIO_OKAPI_TOKEN']
     tenant_id = os.environ['FOLIO_OKAPI_TENANT_ID']
@@ -231,17 +254,17 @@ def folio_exists(record_type, record_id):
     }
 
     from commonpy.network_utils import net
-    request_url = url + _ENDPOINT[record_type] + '/' + record_id
+    request_url = url + _ENDPOINT[record_kind] + '/' + record_id
     (resp, _) = net('get', request_url, headers = headers)
     if resp and resp.status_code > 500:
         alert(f'FOLIO returned status code {resp.status_code} -- quitting.')
         sys.exit(1)
     exists = (resp and resp.status_code < 400)
-    log(f'{record_type} record {record_id} {"exists" if exists else "does not exist"}')
+    log(f'{record_kind} record {record_id} {"exists" if exists else "does not exist"}')
     return exists
 
 
-def folio_new(record_type, record):
+def folio_create(record_kind, record):
     url       = os.environ['FOLIO_OKAPI_URL']
     token     = os.environ['FOLIO_OKAPI_TOKEN']
     tenant_id = os.environ['FOLIO_OKAPI_TENANT_ID']
@@ -253,29 +276,36 @@ def folio_new(record_type, record):
     }
 
     record_id = record['id']
-    inform(f'Creating new [bold]{record_type}[/] record with UUID {record_id}')
-    request_url = url + _ENDPOINT[record_type]
+    request_url = url + _ENDPOINT[record_kind]
     import json
     json_string = json.dumps(record)
     from commonpy.network_utils import net
     (resp, error) = net('post', request_url, headers = headers, data = json_string)
-    if error or not resp or resp.status_code > 500:
-        alert(f'FOLIO returned a server error code {resp.status_code}; aborting.')
-        raise error
+    if error:
+        if resp and resp.status_code == 422:
+            failure_list = json.loads(resp.text).get('errors', [])
+            reasons = ' '.join(failure.get('message', '') for failure in failure_list)
+            alert(f'FOLIO refused to create a record for {record_id}: ' + reasons)
+            return False
+        elif resp and resp.status_code > 500:
+            raise FolioError(f'The FOLIO server returned error {resp.status_code}.')
+        else:
+            raise FolioError(f'Problem creating record for {record_id}:' + str(error))
     succeeded = resp.status_code in [201, 204]
     if not succeeded:
-        alert(f'Creation operation failed with code {resp.status_code}; aborting.')
-        raise RuntimeError(f'Record creation failed with code {resp.status_code}')
+        alert(f'Creation of {record_id} failed with code {resp.status_code}.')
+        return False
 
     # Folio returns the newly created record. check if id is same.
     new_rec = json.loads(resp.text)
     if new_rec['id'] != record_id:
-        alert(f'Newly created record does not have the same UUID; aborting.')
-        raise RuntimeError(f'FOLIO did not create record with same UUID')
+        alert(f'New record for {record_id} does not have the same UUID.')
+        return False
+
     return True
 
 
-def record_type(record_json):
+def kind(record_json):
     if 'barcode' in record_json:
         return 'item_record'
     elif 'holdingsItems' in record_json:
@@ -287,22 +317,13 @@ def record_type(record_json):
         # FIXME need return someting
 
 
-def print_text(text, color, borders = False):
-    from rich import print
+def print_text(text, color):
     import shutil
-    if borders:
-        from rich.panel import Panel
-        from rich.style import Style
-        terminal_width = shutil.get_terminal_size().columns or 79
-        panel_width = terminal_width - 4
-        width = panel_width if len(text) > panel_width else (len(text) + 4)
-        print(Panel(text, style = Style.parse(color), width = width))
-    else:
-        from rich.console import Console
-        from textwrap import wrap
-        width = (shutil.get_terminal_size().columns - 2) or 78
-        console = Console(width = width)
-        console.print('\n'.join(wrap(text, width = width)), style = color)
+    from rich.console import Console
+    from textwrap import wrap
+    width = (shutil.get_terminal_size().columns - 2) or 78
+    console = Console(width = width)
+    console.print('\n'.join(wrap(text, width = width)), style = color)
 
 
 def inform(text):
@@ -317,7 +338,7 @@ def warn(text):
 
 def alert(text):
     log('[alert] ' + text)
-    print_text(text, 'bold red', borders = True)
+    print_text(text, 'bold red')
 
 
 # Main entry point.
