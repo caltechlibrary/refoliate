@@ -17,7 +17,7 @@ file "LICENSE" for more information.
 #  |    by the Makefile. Manual changes to these values will be lost.      |
 #  ╰────────────────────── Notice ── Notice ── Notice ─────────────────────╯
 
-__version__     = '0.0.0'
+__version__     = '0.0.1'
 __description__ = 'REstore FOLIo sAved insTance rEcords'
 __url__         = 'https://github.com/caltechlibrary/refoliate'
 __author__      = 'Mike Hucka'

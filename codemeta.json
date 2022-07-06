@@ -6,7 +6,7 @@
   "codeRepository": "https://github.com/caltechlibrary/refoliate",
   "issueTracker": "https://github.com/caltechlibrary/refoliate/issues",
   "license": "https://github.com/caltechlibrary/refoliate/blob/main/LICENSE",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "author": [
     {
       "@type": "Person",

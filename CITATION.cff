@@ -4,11 +4,11 @@ authors:
   - family-names: Hucka
     given-names: Mike
     affiliation: "Caltech Library"
-    orcid: https://orid.org/YOUR-ORCID-NUMBER
+    orcid: https://orid.org/0000-0001-9105-5960
 title: "REstore FOLIo sAved insTance rEcords"
-version: 0.0.0
+version: 0.0.1
 date-released: RELEASE-DATE
 doi: DOI-VALUE
 url: https://github.com/caltechlibrary/refoliate
 keywords: 
-  - KEYWORDS
+  - FOLIO
