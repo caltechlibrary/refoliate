@@ -25,7 +25,40 @@ This is a command-line program that will take a folder of JSON files (assumed to
 
 ## Usage
 
-... Forthcoming ...
+```
+REstore FOLIo sAved insTance rEcords.
+
+This program takes a directory of JSON files previously downloaded from FOLIO
+by a program such as Foliage.  The files are assumed to represent instance,
+holdings, and item records that have been deleted from FOLIO. This program
+proceeds to put the records back into FOLIO as-is, using the same UUID's
+and all other fields.
+
+If given the argument --continue, then errors involving the inability to
+create a record (e.g., due to the record already existing in FOLIO) will make
+this program continue execution; otherwise, by default, this program will
+stop at the first error.
+
+If given the -@ argument (/@ on Windows), this program will output a detailed
+trace of what it is doing.  The debug trace will be sent to the given
+destination, which can be '-' to indicate console output, or a file path to
+send the output to a file.
+
+If given the -V option (/V on Windows), this program will print the version
+and other information, and exit without doing anything else.
+
+Command-line arguments summary
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+positional arguments:
+  source_dir           directory containing JSON files
+
+options:
+  -h, --help           show this help message and exit
+  -c, --continue       continue, don't stop, if an error occurs
+  -V, --version        print version info and exit
+  -@ OUT, --debug OUT  log debug output to "OUT" ("-" is console)
+```
 
 
 ## Known issues and limitations
