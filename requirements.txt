@@ -6,6 +6,10 @@
 # @website https://github.com/caltechlibrary/refoliate
 # =============================================================================
 
+commonpy
+decouple
 boltons
 plac
+rich
 sidetrack
+validators
