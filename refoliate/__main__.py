@@ -12,8 +12,8 @@ file "LICENSE" for more information.
 import sys
 if sys.version_info <= (3, 8):
     print('refoliate requires Python version 3.8 or higher,')
-    print('but the current version of Python is ' +
-          str(sys.version_info.major) + '.' + str(sys.version_info.minor) + '.')
+    print('but the current version of Python is ' + str(sys.version_info.major)
+          + '.' + str(sys.version_info.minor) + '.')
     sys.exit(1)
 
 import os
@@ -39,9 +39,8 @@ class FolioError(Exception):
     debug      = ('log debug output to "OUT" ("-" is console)', 'option', '@'),
     source_dir = 'directory containing JSON files'
 )
-
-def main(continue_ = False, version = False, debug = 'OUT', *source_dir):
-    '''REstore FOLIo sAved insTance rEcords.
+def main(continue_=False, version=False, debug='OUT', *source_dir):
+    '''REstore FOLIo sAved insTancEs.
 
 This program takes a directory of JSON files previously downloaded from FOLIO
 by a program such as Foliage.  The files are assumed to represent instance,
@@ -265,6 +264,7 @@ _ENDPOINT = {
     'holdings': '/holdings-storage/holdings',
     'instance': '/instance-storage/instances'
 }
+
 
 def folio_exists(record_kind, record_id):
     url       = os.environ['FOLIO_OKAPI_URL']

@@ -1,6 +1,6 @@
 # Refoliate
 
-REstore FOLIo sAved insTance rEcords.
+REstore FOLIo sAved insTancEs.
 
 [![License](https://img.shields.io/badge/License-BSD--like-lightgrey.svg?style=flat-square)](https://github.com/caltechlibrary/refoliate/LICENSE)
 [![Latest release](https://img.shields.io/github/v/release/caltechlibrary/refoliate.svg?style=flat-square&color=b44e88)](https://github.com/caltechlibrary/refoliate/releases)
@@ -26,7 +26,7 @@ This is a command-line program that will take a folder of JSON files (assumed to
 ## Usage
 
 ```
-REstore FOLIo sAved insTance rEcords.
+REstore FOLIo sAved insTancEs.
 
 This program takes a directory of JSON files previously downloaded from FOLIO
 by a program such as Foliage.  The files are assumed to represent instance,

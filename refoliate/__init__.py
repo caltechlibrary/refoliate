@@ -18,7 +18,7 @@ file "LICENSE" for more information.
 #  ╰────────────────────── Notice ── Notice ── Notice ─────────────────────╯
 
 __version__     = '0.0.1'
-__description__ = 'REstore FOLIo sAved insTance rEcords'
+__description__ = 'REstore FOLIo sAved insTancEs'
 __url__         = 'https://github.com/caltechlibrary/refoliate'
 __author__      = 'Mike Hucka'
 __email__       = 'helpdesk@library.caltech.edu'
