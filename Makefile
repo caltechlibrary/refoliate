@@ -9,8 +9,8 @@
 .ONESHELL: 				# Run all commands in the same shell.
 .SHELLFLAGS += -e			# Exit at the first error.
 
-# This needs at least GNU Make version 3.82.
-# The following is based on the approach posted by Eldar Abusalimov to
+# This Makefile uses syntax that needs at least GNU Make version 3.82.
+# The following test is based on the approach posted by Eldar Abusalimov to
 # Stack Overflow in 2012 at https://stackoverflow.com/a/12231321/743730
 
 ifeq ($(filter undefine,$(value .FEATURES)),)
@@ -23,26 +23,26 @@ endif
 # The following is based on the approach posted by Jonathan Ben-Avraham to
 # Stack Overflow in 2014 at https://stackoverflow.com/a/25668869
 
-PROGRAMS_NEEDED = curl gh git jq sed
-TEST := $(foreach p,$(PROGRAMS_NEEDED),\
+programs_needed = awk curl gh git jq sed python3
+TEST := $(foreach p,$(programs_needed),\
 	  $(if $(shell which $(p)),_,$(error Cannot find program "$(p)")))
 
 # Set some basic variables.  These are quick to set; we set additional
 # variables using "set-vars" but only when the others are needed.
 
-name	  := $(strip $(shell awk -F "=" '/^name/ {print $$2}' setup.cfg))
-version	  := $(strip $(shell awk -F "=" '/^version/ {print $$2}' setup.cfg))
-url	  := $(strip $(shell awk -F "=" '/^url/ {print $$2}' setup.cfg))
-desc	  := $(strip $(shell awk -F "=" '/^description / {print $$2}' setup.cfg))
-author	  := $(strip $(shell awk -F "=" '/^author / {print $$2}' setup.cfg))
-email	  := $(strip $(shell awk -F "=" '/^author_email/ {print $$2}' setup.cfg))
-license	  := $(strip $(shell awk -F "=" '/^license / {print $$2}' setup.cfg))
-platform  := $(strip $(shell python3 -c 'import sys; print(sys.platform)'))
-os	  := $(subst $(platform),darwin,macos)
-branch	  := $(shell git rev-parse --abbrev-ref HEAD)
-initfile  := $(name)/__init__.py
-distdir   := dist/$(os)
-builddir  := build/$(os)
+name	 := $(strip $(shell awk -F "=" '/^name/ {print $$2}' setup.cfg))
+version	 := $(strip $(shell awk -F "=" '/^version/ {print $$2}' setup.cfg))
+url	 := $(strip $(shell awk -F "=" '/^url/ {print $$2}' setup.cfg))
+desc	 := $(strip $(shell awk -F "=" '/^description / {print $$2}' setup.cfg))
+author	 := $(strip $(shell awk -F "=" '/^author / {print $$2}' setup.cfg))
+email	 := $(strip $(shell awk -F "=" '/^author_email/ {print $$2}' setup.cfg))
+license	 := $(strip $(shell awk -F "=" '/^license / {print $$2}' setup.cfg))
+platform := $(strip $(shell python3 -c 'import sys; print(sys.platform)'))
+os	 := $(subst $(platform),darwin,macos)
+branch	 := $(shell git rev-parse --abbrev-ref HEAD)
+initfile := $(name)/__init__.py
+distdir  := dist/$(os)
+builddir := build/$(os)
 
 
 # Print help if no command is given ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -57,6 +57,15 @@ help:
 	@echo 'make report'
 	@echo '  Print variables set in this Makefile from various sources.'
 	@echo '  This is useful to verify the values that have been parsed.'
+	@echo ''
+	@echo 'make lint'
+	@echo '  Run Python linters like flake8.'
+	@echo ''
+	@echo 'make test'
+	@echo '  Run pytest.'
+	@echo ''
+	@echo 'make install'
+	@echo '  Install the project in dev mode.'
 	@echo ''
 	@echo 'make release'
 	@echo '  Do a release on GitHub. This will push changes to GitHub,'
@@ -126,6 +135,21 @@ report: vars
 	@echo initfile  = $(initfile)
 	@echo distdir	= $(distdir)
 	@echo builddir	= $(builddir)
+
+
+# make lint & make test ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+lint:
+	flake8 refoliate
+
+test: lint
+	pytest -v --cov=refoliate -l tests/
+
+
+# make install ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+install:
+	python3 install -e .[dev]
 
 
 # make release ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -253,6 +277,7 @@ clean-release:;
 clean-other:;
 	rm -fr __pycache__ $(name)/__pycache__ .eggs
 	rm -rf .cache
+	rm -rf .pytest_cache
 
 .PHONY: help vars report release test-branch \
 	update-init update-meta update-citation commit-updates \
