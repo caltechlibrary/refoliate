@@ -1,14 +1,15 @@
 cff-version: 1.2
 message: "If you use this software, please cite it using these metadata."
+title: "refoliate"
 authors: 
   - family-names: Hucka
     given-names: Mike
     affiliation: "Caltech Library"
-    orcid: https://orid.org/0000-0001-9105-5960
-title: "REstore FOLIo sAved insTance rEcords"
-version: 0.0.1
-date-released: RELEASE-DATE
-doi: DOI-VALUE
-url: https://github.com/caltechlibrary/refoliate
+    orcid: "https://orid.org/0000-0001-9105-5960"
+version: "0.0.1"
+abstract: "REstore FOLIo sAved insTance rEcords"
+repository-code: "https://github.com/caltechlibrary/refoliate"
+date-released: "RELEASE-DATE"
+url: "https://github.com/caltechlibrary/refoliate"
 keywords: 
   - FOLIO
