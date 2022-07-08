@@ -142,7 +142,7 @@ report: vars
 lint:
 	flake8 refoliate
 
-test: lint
+test tests:
 	pytest -v --cov=refoliate -l tests/
 
 
